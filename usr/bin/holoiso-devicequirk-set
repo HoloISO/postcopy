@@ -1,0 +1,30 @@
+#!/bin/bash
+
+DEVICENAME=$(cat /sys/devices/virtual/dmi/id/product_name)
+
+if [[ "${DEVICENAME}" =~ "Jupiter" ]]; then
+    export HOLOISO_GAMESCOPE_RES="-w 1280 -h 800"
+    export HOLOISO_X11_ROTATION=right
+    export HOLOISO_DEVICE_TYPE="SteamDeck"
+fi
+
+if [[ "${DEVICENAME}" =~ "Gallileo" ]]; then
+    export HOLOISO_GAMESCOPE_RES="-w 1280 -h 800"
+    export HOLOISO_X11_ROTATION=right
+    export HOLOISO_DEVICE_TYPE="SteamDeckOLED"
+fi
+
+# Set required properties if they are empty
+if [[ -z "$HOLOISO_DEVICE_TYPE" ]]; then
+    if [[ -f "/etc/lib/holoiso-hwsupport/customdevicequirks/$(cat /sys/devices/virtual/dmi/id/product_name | tr -d '[:space:]').sh" ]]; then
+        source /etc/lib/holoiso-hwsupport/customdevicequirks/$(cat /sys/devices/virtual/dmi/id/product_name | tr -d '[:space:]').sh
+    elif [[ -f "/etc/lib/holoiso-hwsupport/him_devicequirks/$(cat /sys/devices/virtual/dmi/id/product_name | tr -d '[:space:]').sh" ]]; then
+        source /etc/lib/holoiso-hwsupport/him_devicequirks/$(cat /sys/devices/virtual/dmi/id/product_name | tr -d '[:space:]').sh    
+    else
+        echo "Skipping any device quirks, as device-specific quirks weren't set."
+    fi
+fi
+
+if [[ -z "$HOLOISO_GAMESCOPE_RES" ]]; then
+    export HOLOISO_GAMESCOPE_RES="-w 1280 -h 720"
+fi
