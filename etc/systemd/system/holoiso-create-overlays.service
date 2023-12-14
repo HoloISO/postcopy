@@ -1,0 +1,9 @@
+[Unit]
+Description=HoloISO Overlay - Create first boot directories
+
+[Service]
+Type=oneshot
+ExecStart=/bin/holoiso-create-overlays
+
+[Install]
+WantedBy=local-fs.target
