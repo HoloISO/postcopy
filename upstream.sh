@@ -32,3 +32,4 @@ pkgdir=${SCRIPTPATH}
     echo "Cleaning up..."
     rm -rf ${srcdir}/jupiter-hw-support
     rm -rf ${srcdir}/steamdeck-kde-presets
+    rm -rf ${srcdir}
