@@ -1,5 +1,6 @@
 [Unit]
 Description=HoloISO Overlay - Create first boot directories
+Before=local-fs.target
 
 [Service]
 Type=oneshot
