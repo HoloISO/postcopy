@@ -1,0 +1,101 @@
+#!/bin/bash
+
+if [[ $EUID -ne 0 ]];
+then
+    exec pkexec --disable-internal-agent "$0" "$@"
+fi
+
+source /etc/holoiso-release
+argdata=/tmp/steamos-update-temparg
+ready_watcher=/tmp/steamos-ready-to-deploy
+
+branchpath=/etc/holoiso-branch
+
+if [[ -f "${branchpath}" ]]; then
+    UPD_BRANCH=$(cat ${branchpath})
+else
+    UPD_BRANCH=${RELEASETYPE}
+fi
+
+endpoint=https://api.github.com/repos/holoiso-staging/releases_${UPD_BRANCH}/releases
+downloadpath=/home/.steamos/updatecontainer
+
+
+get_img_details(){
+    stdout=$(jq)
+    stdout=$(echo "${stdout}" | jq 'del(.[] | select(.assets[].state != "uploaded"))')
+    os_tag_name=$(echo "${stdout}" | jq -er '[ .[] | select(.prerelease==false) ] | first | .tag_name')
+    download_img_id=$(echo "${stdout}" | jq -er '[ .[] | select(.prerelease==false) ] | first | .assets[] | select(.browser_download_url | test(".img.tar.xz")) | .browser_download_url')
+    download_sha_id=$(echo "${stdout}" | jq -er '[ .[] | select(.prerelease==false) ] | first | .assets[] | select(.browser_download_url | test(".sha256")) | .browser_download_url')
+    if [[ "${os_tag_name}" == "${IMAGE_ID}" ]]; then
+        echo "System up to date."
+    elif [[ "${os_tag_name}" > "${IMAGE_ID}" ]]; then
+        echo -e "OS_TAG_NAME=$os_tag_name\nGH_IMG_DL=$download_img_id\nGH_SHA_DL=$download_sha_id" > ${argdata}
+        echo "Update available. OS Update: ${os_tag_name}"
+    elif [[ "${os_tag_name}" < "${IMAGE_ID}" ]]; then
+        echo -e "Your version (${IMAGE_ID}) is newer than currently available (${os_tag_name}).\nPlease wait for next update to appear available in branch \"${UPD_BRANCH}\" for installation."
+        exit 7
+    fi
+}
+
+updatecheck(){
+    curl -s "${endpoint}" | get_img_details
+    if [[ -f "${argdata}" ]]; then
+        exit 0
+    else
+        exit 7
+    fi
+}
+
+verintg(){
+    echo "Verifying update file integrity..."
+    CURR_SHA=$(echo $(sha256sum ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz) | awk '{print $1}')
+    if [[ "${CURR_SHA}" == "$(cat ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256)" ]]; then
+        touch ${ready_watcher}
+        echo "Update file download complete. The system is ready to update."
+    else
+        rm -rf ${downloadpath}/${OS_TAG_NAME}
+        echo "Verification failed. Download contents erased."
+        exit 1
+    fi
+}
+
+dlupd(){
+    source ${argdata}
+    if [[ -f "${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz" ]] && [[ -f "${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256" ]]; then
+        verintg
+    else
+        mkdir -p "${downloadpath}/${OS_TAG_NAME}"
+        curl --http1.1 -L -H "Accept: application/octet-stream" -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz "${GH_IMG_DL}"
+        curl --http1.1 -L -H "Accept: application/octet-stream" -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256 "${GH_SHA_DL}"
+    fi
+        verintg
+}
+
+if [ -n "$1" ]; then
+    case "$1" in
+    "check")
+        rm -f ${argdata} ${ready_watcher}
+	    updatecheck
+        ;;
+    "--beta")
+        echo "Steam Client stub"
+        exit 0
+        ;;
+    "--enable-duplicate-detection") 
+        echo "Steam Client stub"
+        exit 0 
+        ;;
+    "--supports-duplicate-detection")
+      info "This script supports the duplicate detection option"
+      exit 0
+    ;;
+    esac
+    shift
+else
+    if [[ -f "${argdata}" ]]; then
+        applyupdate
+    else
+        echo "Unknown option"
+    fi
+fi
