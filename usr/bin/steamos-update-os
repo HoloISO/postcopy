@@ -1,0 +1,79 @@
+#!/bin/bash
+if [[ $EUID -ne 0 ]];
+then
+    exec pkexec --disable-internal-agent "$0" "$@"
+fi
+argdata=$1
+ready_watcher=/tmp/steamos-ready-to-deploy
+downloadpath=/home/.steamos/updatecontainer
+# We assume we entered this step only after confirming that we are okay to continue.
+verintg(){
+    echo "Starting to update..."
+    if [[ -f "${installcontainer}" ]]; then
+        CURR_SHA=$(echo $(sha256sum ${installcontainer}) | awk '{print $1}')
+        if [[ "${CURR_SHA}" == "$(cat ${installsha})" ]]; then
+            echo "Validity matches. Continuing to next step."
+        else
+            rm -rf ${downloadpath}/${OS_TAG_NAME}
+               echo "Verification failed. Download contents erased."
+               exit 1
+        fi
+    else
+        echo "Unable to find update container. (Download issues?)"
+        exit 1
+    fi
+}
+
+cleandeployments(){
+    DEPLOYMENTS_PATH=$(btrfs subvolume list /holo_root | awk '{print $9}')
+    CURR_DEPLOYMENT=$(mount | grep subvol=/rootfs | sed 's/.*subvol=\///g' | sed 's/)//g')
+    for deployment in $DEPLOYMENTS_PATH;
+    do
+        if [[ "$CURR_DEPLOYMENT" == "$deployment" ]]; then
+            echo "Ignoring deployment $deployment, as it's currently used."
+        else
+            echo "Removing unused deployment $deployment..."
+            btrfs subvolume delete /holo_root/$deployment
+        fi
+    done
+}
+
+finalizeupd(){
+    mkdir -p ${installpath}
+    mount -t btrfs -o subvol=rootfs/${OS_TAG_NAME} -L holo_root ${installpath}
+    arch-chroot ${installpath} steamos-readonly disable
+    arch-chroot ${installpath} holoiso-grub-update
+    arch-chroot ${installpath} steamos-readonly enable
+    umount -l ${installpath}
+    echo "Cleaning up..."
+    rm -rf ${downloadpath}/${OS_TAG_NAME}/
+    echo "Update complete."
+}
+
+beginupd(){
+    # Decompress update container
+    echo "Decompressing update container..."
+    tar -xf ${installcontainer} -C ${downloadpath}/${OS_TAG_NAME}/
+    echo "Removing the unused snapshot..."
+    cleandeployments
+    echo "Installing snapshot..."
+    btrfs receive /holo_root/rootfs/ < ${installfile}
+    finalizeupd
+}
+
+if [[ -f ${argdata} ]]; then
+    if [[ -f "${ready_watcher}" ]]; then
+        source ${argdata}
+        installcontainer=${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz
+        installsha=${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256
+        installfile=${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img
+        installpath=/tmp/mounts/${OS_TAG_NAME}
+        verintg
+        beginupd
+    else
+        echo -e "Arg data was found, but ready to update sentinel was not found.\nAre you sure that the update container download was completed?\nTry running [38;2;23;147;209msteamos-update check && steamos-update[0m to verify container integrity again."
+    fi
+else
+    echo "No deploy arguments set."
+    exit 1
+fi

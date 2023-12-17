@@ -66,10 +66,16 @@ dlupd(){
         verintg
     else
         mkdir -p "${downloadpath}/${OS_TAG_NAME}"
-        curl --http1.1 -L -H "Accept: application/octet-stream" -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz "${GH_IMG_DL}"
-        curl --http1.1 -L -H "Accept: application/octet-stream" -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256 "${GH_SHA_DL}"
+        curl --http1.1 -# -L -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz  -C - "${GH_IMG_DL}" 2>&1 | stdbuf -oL tr '\r' '\n' | grep --line-buffered -oP '[0-9]*+(?=.[0-9])'
+        curl --http1.1 -# -L -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256  -C - "${GH_SHA_DL}" 2>&1 | stdbuf -oL tr '\r' '\n' | grep --line-buffered -oP '[0-9]*+(?=.[0-9])'
     fi
         verintg
+}
+
+
+applyupdate(){
+    dlupd
+    steamos-update-os ${argdata}
 }
 
 if [ -n "$1" ]; then
@@ -87,8 +93,8 @@ if [ -n "$1" ]; then
         exit 0 
         ;;
     "--supports-duplicate-detection")
-      info "This script supports the duplicate detection option"
-      exit 0
+        echo "This script supports the duplicate detection option"
+        exit 0
     ;;
     esac
     shift
