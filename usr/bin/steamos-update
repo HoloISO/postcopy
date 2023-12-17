@@ -38,6 +38,19 @@ get_img_details(){
     fi
 }
 
+clean_progress() {
+	local scale=$1
+	local postfix=$2
+	local last_value=$scale
+	while IFS= read -r line; do
+		value=$(( ${line}*${scale}/100 ))
+		if [ "$last_value" != "$value" ]; then
+			echo ${value}${postfix}
+			last_value=$value
+		fi
+	done
+}
+
 updatecheck(){
     curl -s "${endpoint}" | get_img_details
     if [[ -f "${argdata}" ]]; then
@@ -66,8 +79,8 @@ dlupd(){
         verintg
     else
         mkdir -p "${downloadpath}/${OS_TAG_NAME}"
-        curl --http1.1 -# -L -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz  -C - "${GH_IMG_DL}" 2>&1 | stdbuf -oL tr '\r' '\n' | grep --line-buffered -oP '[0-9]*+(?=.[0-9])'
-        curl --http1.1 -# -L -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256  -C - "${GH_SHA_DL}" 2>&1 | stdbuf -oL tr '\r' '\n' | grep --line-buffered -oP '[0-9]*+(?=.[0-9])'
+        curl --http1.1 -# -L -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz  -C - "${GH_IMG_DL}" 2>&1 | stdbuf -oL tr '\r' '\n' | grep --line-buffered -oP '[0-9]*+(?=.[0-9])' | clean_progress 100 %
+        curl --http1.1 -# -L -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256  -C - "${GH_SHA_DL}"
     fi
         verintg
 }
