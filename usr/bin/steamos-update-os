@@ -54,7 +54,7 @@ beginupd(){
     # Decompress update container
     echo "Decompressing update container..."
     tar -xf ${installcontainer} -C ${downloadpath}/${OS_TAG_NAME}/
-    echo "Removing the unused snapshot..."
+    echo "Removing unused snapshots..."
     cleandeployments
     echo "Installing snapshot..."
     btrfs receive /holo_root/rootfs/ < ${installfile}
