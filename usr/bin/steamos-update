@@ -17,26 +17,10 @@ else
     UPD_BRANCH=${RELEASETYPE}
 fi
 
-endpoint=https://api.github.com/repos/holoiso-staging/releases_${UPD_BRANCH}/releases
+downloadendpoint=https://cd2.holoiso.ru.eu.org/holoiso-images
+preferred_imgtype=".img.zst"
+endpoint=https://cd2.holoiso.ru.eu.org/holoiso-images/latest_${UPD_BRANCH}.releasemeta
 downloadpath=/home/.steamos/updatecontainer
-
-
-get_img_details(){
-    stdout=$(jq)
-    stdout=$(echo "${stdout}" | jq 'del(.[] | select(.assets[].state != "uploaded"))')
-    os_tag_name=$(echo "${stdout}" | jq -er '[ .[] | select(.prerelease==false) ] | first | .tag_name')
-    download_img_id=$(echo "${stdout}" | jq -er '[ .[] | select(.prerelease==false) ] | first | .assets[] | select(.browser_download_url | test(".img.tar.xz")) | .browser_download_url')
-    download_sha_id=$(echo "${stdout}" | jq -er '[ .[] | select(.prerelease==false) ] | first | .assets[] | select(.browser_download_url | test(".sha256")) | .browser_download_url')
-    if [[ "${os_tag_name}" == "${IMAGE_ID}" ]]; then
-        echo "System up to date."
-    elif [[ "${os_tag_name}" > "${IMAGE_ID}" ]]; then
-        echo -e "OS_TAG_NAME=$os_tag_name\nGH_IMG_DL=$download_img_id\nGH_SHA_DL=$download_sha_id" > ${argdata}
-        echo "Update available. OS Update: ${os_tag_name}"
-    elif [[ "${os_tag_name}" < "${IMAGE_ID}" ]]; then
-        echo -e "Your version (${IMAGE_ID}) is newer than currently available (${os_tag_name}).\nPlease wait for next update to appear available in branch \"${UPD_BRANCH}\" for installation."
-        exit 7
-    fi
-}
 
 clean_progress() {
 	local scale=$1
@@ -52,22 +36,29 @@ clean_progress() {
 }
 
 updatecheck(){
-    curl -s "${endpoint}" | get_img_details
-    if [[ -f "${argdata}" ]]; then
-        exit 0
-    else
+    curl -s "${endpoint}" > ${argdata}
+    source ${argdata}
+    if [[ "${IMAGEFILE}" == "${IMAGE_ID}" ]]; then
+        echo "System up to date."
+    elif [[ ! -s "${argdata}" ]]; then
+        echo "Empty arguments file. Connect to internet or update your OS manually."
+        exit 7
+    elif [[ "${IMAGEFILE}" > "${IMAGE_ID}" ]]; then
+        echo "Update available. OS Update: ${IMAGEFILE}"
+    elif [[ "${IMAGEFILE}" < "${IMAGE_ID}" ]]; then
+        echo -e "Your version (${IMAGE_ID}) is newer than currently available (${IMAGEFILE}).\nPlease wait for next update to appear available in branch \"${UPD_BRANCH}\" for installation."
         exit 7
     fi
 }
 
 verintg(){
     echo "Verifying update file integrity..."
-    CURR_SHA=$(echo $(sha256sum ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz) | awk '{print $1}')
-    if [[ "${CURR_SHA}" == "$(cat ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256)" ]]; then
+    CURR_SHA=$(echo $(sha256sum ${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.img.zst) | awk '{print $1}')
+    if [[ "${CURR_SHA}" == "$(cat ${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.sha256)" ]]; then
         touch ${ready_watcher}
         echo "Update file download complete. The system is ready to update."
     else
-        rm -rf ${downloadpath}/${OS_TAG_NAME}
+        rm -rf ${downloadpath}/${IMAGEFILE}
         echo "Verification failed. Download contents erased."
         exit 1
     fi
@@ -75,12 +66,12 @@ verintg(){
 
 dlupd(){
     source ${argdata}
-    if [[ -f "${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz" ]] && [[ -f "${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256" ]]; then
+    if [[ -f "${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.img.zst" ]] && [[ -f "${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.sha256" ]]; then
         verintg
     else
-        mkdir -p "${downloadpath}/${OS_TAG_NAME}"
-        curl --http1.1 -# -L -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz  -C - "${GH_IMG_DL}" 2>&1 | stdbuf -oL tr '\r' '\n' | grep --line-buffered -oP '[0-9]*+(?=.[0-9])' | clean_progress 100 %
-        curl --http1.1 -# -L -o ${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256  -C - "${GH_SHA_DL}"
+        mkdir -p "${downloadpath}/${IMAGEFILE}"
+        curl --http1.1 -# -L -o ${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.img.zst  -C - "${downloadendpoint}/${IMAGEFILE}${preferred_imgtype}" 2>&1 | stdbuf -oL tr '\r' '\n' | grep --line-buffered -oP '[0-9]*+(?=.[0-9])' | clean_progress 100 %
+        curl --http1.1 -# -L -o ${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.sha256  -C - "${downloadendpoint}/${IMAGEFILE}.sha256"
     fi
         verintg
 }

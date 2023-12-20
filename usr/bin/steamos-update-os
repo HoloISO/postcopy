@@ -14,7 +14,7 @@ verintg(){
         if [[ "${CURR_SHA}" == "$(cat ${installsha})" ]]; then
             echo "Validity matches. Continuing to next step."
         else
-            rm -rf ${downloadpath}/${OS_TAG_NAME}
+            rm -rf ${downloadpath}/${IMAGEFILE}
                echo "Verification failed. Download contents erased."
                exit 1
         fi
@@ -40,23 +40,23 @@ cleandeployments(){
 
 finalizeupd(){
     mkdir -p ${installpath}
-    mount -t btrfs -o subvol=rootfs/${OS_TAG_NAME} -L holo_root ${installpath}
+    mount -t btrfs -o subvol=rootfs/${IMAGEFILE} -L holo_root ${installpath}
     arch-chroot ${installpath} steamos-readonly disable
     arch-chroot ${installpath} holoiso-grub-update
     arch-chroot ${installpath} steamos-readonly enable
     umount -l ${installpath}
     echo "Cleaning up..."
-    rm -rf ${downloadpath}/${OS_TAG_NAME}/
+    rm -rf ${downloadpath}/${IMAGEFILE}/
     echo "Update complete."
 }
 
 beginupd(){
     # Decompress update container
     echo "Decompressing update container..."
-    tar -xf ${installcontainer} -C ${downloadpath}/${OS_TAG_NAME}/
+    zstd -df ${installcontainer}
     echo "Removing unused snapshots..."
     cleandeployments
-    echo "Installing snapshot..."
+    echo "Installing OS Image ${STAGING_OS_TAG}..."
     btrfs receive /holo_root/rootfs/ < ${installfile}
     finalizeupd
 }
@@ -64,10 +64,10 @@ beginupd(){
 if [[ -f ${argdata} ]]; then
     if [[ -f "${ready_watcher}" ]]; then
         source ${argdata}
-        installcontainer=${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img.tar.xz
-        installsha=${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.sha256
-        installfile=${downloadpath}/${OS_TAG_NAME}/${OS_TAG_NAME}.img
-        installpath=/tmp/mounts/${OS_TAG_NAME}
+        installcontainer=${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.img.zst
+        installsha=${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.sha256
+        installfile=${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.img
+        installpath=/tmp/mounts/${IMAGEFILE}
         verintg
         beginupd
     else
