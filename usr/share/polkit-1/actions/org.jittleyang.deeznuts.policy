@@ -50,5 +50,25 @@
     </defaults>
     <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/holoiso-disable-sessions</annotate>
   </action>
+  <action id="org.jittleyang.deeznuts.oobe">
+    <description>Allow creating OOBE directories</description>
+    <icon_name>package-x-generic</icon_name> 
+    <defaults>
+      <allow_any>yes</allow_any>
+      <allow_inactive>yes</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/holoiso-create-overlays</annotate>
+  </action>
+  <action id="org.jittleyang.deeznuts.dns">
+    <description>Allow controlling read-only instances</description>
+    <icon_name>package-x-generic</icon_name> 
+    <defaults>
+      <allow_any>yes</allow_any>
+      <allow_inactive>yes</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/steamos-readonly</annotate>
+  </action>
 </policyconfig>
 
