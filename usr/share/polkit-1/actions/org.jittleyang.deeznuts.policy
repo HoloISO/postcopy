@@ -60,7 +60,7 @@
     </defaults>
     <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/holoiso-create-overlays</annotate>
   </action>
-  <action id="org.jittleyang.deeznuts.dns">
+  <action id="org.jittleyang.deeznuts.dnsss">
     <description>Allow controlling read-only instances</description>
     <icon_name>package-x-generic</icon_name> 
     <defaults>
@@ -69,6 +69,28 @@
       <allow_active>yes</allow_active>
     </defaults>
     <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/steamos-readonly</annotate>
+  </action>
+</policyconfig>
+  <action id="org.jittleyang.deeznuts.dnas">
+    <description>Allow controlling read-only instances</description>
+    <icon_name>package-x-generic</icon_name> 
+    <defaults>
+      <allow_any>yes</allow_any>
+      <allow_inactive>yes</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/steamos-update</annotate>
+  </action>
+</policyconfig>
+  <action id="org.jittleyang.deeznuts.adns">
+    <description>Allow controlling read-only instances</description>
+    <icon_name>package-x-generic</icon_name> 
+    <defaults>
+      <allow_any>yes</allow_any>
+      <allow_inactive>yes</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/steamos-update-os</annotate>
   </action>
 </policyconfig>
 

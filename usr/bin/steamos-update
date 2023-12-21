@@ -40,8 +40,11 @@ updatecheck(){
     source ${argdata}
     if [[ "${IMAGEFILE}" == "${IMAGE_ID}" ]]; then
         echo "System up to date."
+        rm -rf ${argdata}
+        exit 7
     elif [[ ! -s "${argdata}" ]]; then
         echo "Empty arguments file. Connect to internet or update your OS manually."
+        rm -rf ${argdata}
         exit 7
     elif [[ "${IMAGEFILE}" > "${IMAGE_ID}" ]]; then
         echo "Update available. OS Update: ${IMAGEFILE}"
@@ -89,16 +92,16 @@ if [ -n "$1" ]; then
 	    updatecheck
         ;;
     "--beta")
-        echo "Steam Client stub"
-        exit 0
+        rm -f ${argdata} ${ready_watcher}
+	    updatecheck
         ;;
     "--enable-duplicate-detection") 
         echo "Steam Client stub"
-        exit 0 
+        exit 7 
         ;;
     "--supports-duplicate-detection")
         echo "This script supports the duplicate detection option"
-        exit 0
+        exit 7
     ;;
     esac
     shift
