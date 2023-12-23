@@ -1,0 +1,8 @@
+#!/bin/bash
+cd ~
+$ git clone https://github.com/ShadowBlip/ayn-platform.git
+$ cd ayn-platform
+$ make
+# make dkms
+cd -
+rm -rf ayn-platform

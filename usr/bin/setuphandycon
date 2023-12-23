@@ -1,0 +1,8 @@
+#!/bin/bash
+cd ~
+git clone https://github.com/ShadowBlip/HandyGCCS.git
+cd HandyGCCS
+./build.sh
+systemctl enable handycon
+cd -
+rm -rf HandyGCCS
