@@ -25,17 +25,19 @@ verintg(){
 }
 
 cleandeployments(){
-    DEPLOYMENTS_PATH=$(btrfs subvolume list /holo_root | awk '{print $9}')
-    CURR_DEPLOYMENT=$(mount | grep subvol=/rootfs | sed 's/.*subvol=\///g' | sed 's/)//g')
-    for deployment in $DEPLOYMENTS_PATH;
-    do
-        if [[ "$CURR_DEPLOYMENT" == "$deployment" ]]; then
-            echo "Ignoring deployment $deployment, as it's currently used."
-        else
+    source /etc/holoiso-release
+    DEPLOYMENTS_PATH=$(btrfs subvolume list /holo_root | awk '{print $9}' | grep -v ${IMAGE_ID})
+    if [[ -z "${DEPLOYMENTS_PATH}" ]]; then
+        echo "No unused deployments detected."
+    else
+        for deployment in $DEPLOYMENTS_PATH;
+        do
             echo "Removing unused deployment $deployment..."
             btrfs subvolume delete /holo_root/$deployment
-        fi
-    done
+            echo "Finished cleaning up deployments..."
+            echo "Going to next step."
+        done
+    fi
 }
 
 finalizeupd(){

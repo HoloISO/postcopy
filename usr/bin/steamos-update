@@ -110,5 +110,6 @@ else
         applyupdate
     else
         echo "Unknown option"
+        exit 7
     fi
 fi
