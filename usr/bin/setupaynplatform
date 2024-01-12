@@ -1,8 +1,12 @@
 #!/bin/bash
+if [[ $EUID -ne 0 ]];
+then
+    echo "$0 must be ran as root."
+fi
+
 cd ~
 git clone https://github.com/ShadowBlip/ayn-platform.git
 cd ayn-platform
-make
-# make dkms
+make dkms
 cd -
 rm -rf ayn-platform
