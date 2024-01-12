@@ -44,6 +44,7 @@ finalizeupd(){
     mkdir -p ${installpath}
     mount -t btrfs -o subvol=rootfs/${IMAGEFILE} -L holo_root ${installpath}
     arch-chroot ${installpath} steamos-readonly disable
+    arch-chroot ${installpath} holoiso-postupdate-mgmt
     arch-chroot ${installpath} holoiso-grub-update
     arch-chroot ${installpath} steamos-readonly enable
     umount -l ${installpath}
