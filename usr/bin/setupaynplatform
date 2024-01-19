@@ -5,8 +5,6 @@ then
 fi
 
 cd ~
-git clone https://github.com/ShadowBlip/ayn-platform.git
-cd ayn-platform
+cd /usr/lib/ayn-platform
 make dkms
 cd -
-rm -rf ayn-platform
