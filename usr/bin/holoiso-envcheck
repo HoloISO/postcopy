@@ -11,6 +11,7 @@ for gpu_id in "${gpu_ids[@]}"; do
         break
     else
         echo "Non-NVIDIA GPU found with ID: $gpu_id"
+        export HOLOISO_ENV_GAMESCOPEEXEC="gamescope"
         export HOLOISO_GPU_TYPE="mesa"
     fi
 done
