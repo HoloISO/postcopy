@@ -7,6 +7,7 @@ fi
 if [[ "${HOLOISO_GPU_TYPE}" == "nv" ]]; then    
     cd /usr/lib/nvpkgs
     pacman -U --noconfirm *.zst
+    mkinitcpio -P
     cd -
 fi
 echo "Post-update hooks installation complete."
