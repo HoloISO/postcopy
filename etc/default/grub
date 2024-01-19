@@ -1,8 +1,9 @@
 source holoiso-devicequirk-set
+source holoiso-envcheck
 GRUB_DEFAULT=0
 GRUB_TIMEOUT=1
 GRUB_DISTRIBUTOR=SteamOS
-GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash plymouth.nolog ${HOLOISO_GRUB_ADDITIONAL_CMDLINEOPTIONS}"
+GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash plymouth.nolog ${HOLOISO_GRUB_ADDITIONAL_CMDLINEOPTIONS} ${HOLOISO_GPU_FIXES}"
 GRUB_SAVEDEFAULT="false"
 GRUB_DISABLE_LINUX_UUID=true
 GRUB_DEVICE="LABEL=holo_root"
