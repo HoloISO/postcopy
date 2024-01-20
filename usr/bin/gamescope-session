@@ -293,9 +293,15 @@ steamargs=("-steamos3" "-steampal" "-steamdeck" "-gamepadui")
 
 # steamargs+=("-steamfs")
 
-(while true; do
-    /usr/lib/hwsupport/powerbuttond
-done) &
+if [[ "${HOLOISO_DEVICE_TYPE}" =~ "SteamDeck" ]]; then
+	(while true; do
+    	/usr/lib/hwsupport/powerbuttond
+	done) &
+else
+	(while true; do
+    	/usr/lib/holoiso-hwsupport/power-button-handler.py
+	done) &
+fi
 
 
 short_session_tracker_file="/tmp/steamos-short-session-tracker"
