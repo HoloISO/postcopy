@@ -255,9 +255,8 @@ else
 	echo >&2 "!! Failed to claim global gamescope stats session"
 fi
 
-source holoiso-envcheck
 source holoiso-devicequirk-set
-${HOLOISO_ENV_GAMESCOPEEXEC} \
+gamescope \
 	--generate-drm-mode fixed \
 	--xwayland-count 2 \
 	${HOLOISO_GAMESCOPE_ADDITIONAL_OPTIONS} \
