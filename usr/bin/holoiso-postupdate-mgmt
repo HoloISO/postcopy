@@ -1,13 +1,2 @@
 #!/bin/bash
-source holoiso-devicequirk-set
-source holoiso-envcheck
-if [[ "${HOLOISO_DEVICE_TYPE}" == "Ayn" ]]; then
-    setupaynplatform
-fi
-if [[ "${HOLOISO_GPU_TYPE}" == "nv" ]]; then    
-    cd /usr/lib/nvpkgs
-    pacman -U --noconfirm *.zst
-    mkinitcpio -P
-    cd -
-fi
 echo "Post-update hooks installation complete."
