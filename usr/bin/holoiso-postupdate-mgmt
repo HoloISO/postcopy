@@ -1,6 +1,5 @@
 #!/bin/bash
 source holoiso-devicequirk-set
-source holoiso-envcheck
 if [[ "${HOLOISO_DEVICE_TYPE}" == "Ayn" ]]; then
     setupaynplatform
 fi
