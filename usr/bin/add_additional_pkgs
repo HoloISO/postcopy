@@ -1,11 +1,4 @@
 #!/bin/bash
-mkdir /usr/lib/nvpkgs
-cd /usr/lib/nvpkgs
-pacman -Sy
-umount -l /var/cache/pacman/pkg/
-DLLIST=$(pacman -Sp lib32-nvidia-utils nvidia-dkms)
-wget ${DLLIST}
-cd -
 
 cd /usr/lib/
 git clone https://github.com/ShadowBlip/ayn-platform.git
