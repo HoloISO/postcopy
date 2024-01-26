@@ -64,6 +64,7 @@ updatecheck(){
     elif [[ "${IMAGEFILE}" > "${IMAGE_ID}" ]]; then
         echo "Update available. OS Update: ${IMAGEFILE}"
     elif [[ "${IMAGEFILE}" < "${IMAGE_ID}" ]]; then
+        rm -rf ${argdata}
         echo -e "Your version (${IMAGE_ID}) is newer than currently available (${IMAGEFILE}).\nPlease wait for next update to appear available in branch \"${UPD_BRANCH}\" for installation."
         exit 7
     fi
