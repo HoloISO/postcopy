@@ -21,7 +21,7 @@ if [[ -f "/etc/manual-enroll-override" ]]; then
     UPDATE_BRANCH_OVERRIDE=$(cat /etc/manual-enroll-override)
 else
     if [[ -n "${UPDATE_BRANCH_OVERRIDE}" ]]; then
-        echo "Update branch override: $UPDATE_BRANCH_OVERRIDE"
+        echo -e "Update branch override: $UPDATE_BRANCH_OVERRIDE\n"
     fi
 fi
 
@@ -35,7 +35,6 @@ fi
 preferred_imgtype=".img.zst"
 endpoint=${downloadendpoint}/latest_${UPD_BRANCH}.releasemeta
 downloadpath=/home/.steamos/updatecontainer
-
 
 clean_progress() {
 	local scale=$1
@@ -53,7 +52,7 @@ clean_progress() {
 updatecheck(){
     curl -s "${endpoint}" > ${argdata}
     source ${argdata}
-    if [[ "${IMAGEFILE}" == "${IMAGE_ID}" ]]; then
+    if [[ "${STAGING_OS_TAG}" == "${OS_TAG}" ]]; then
         echo "System up to date."
         rm -rf ${argdata}
         exit 7
@@ -61,11 +60,11 @@ updatecheck(){
         echo "Empty arguments file. Connect to internet or update your OS manually."
         rm -rf ${argdata}
         exit 7
-    elif [[ "${IMAGEFILE}" > "${IMAGE_ID}" ]]; then
+    elif [[ "${STAGING_OS_TAG}" > "${OS_TAG}" ]]; then
         echo "Update available. OS Update: ${IMAGEFILE}"
-    elif [[ "${IMAGEFILE}" < "${IMAGE_ID}" ]]; then
+    elif [[ "${STAGING_OS_TAG}" < "${OS_TAG}" ]]; then
         rm -rf ${argdata}
-        echo -e "Your version (${IMAGE_ID}) is newer than currently available (${IMAGEFILE}).\nPlease wait for next update to appear available in branch \"${UPD_BRANCH}\" for installation."
+        echo -e "Your version (${OS_TAG}) is newer than currently available (${STAGING_OS_TAG}).\nPlease wait for next update to appear available in branch \"${UPD_BRANCH}\" for installation."
         exit 7
     fi
 }
