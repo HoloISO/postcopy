@@ -1,6 +1,16 @@
 #!/bin/bash
+
+if [[ "$1" == "update" ]]; then
+    steamos-readonly disable
+    holoiso-grub-update
+fi
+
 source holoiso-devicequirk-set
 if [[ "${HOLOISO_DEVICE_TYPE}" == "Ayn" ]]; then
     setupaynplatform
 fi
-echo "Post-update hooks installation complete."
+echo "Device-specific postupdate hooks installation complete"
+
+if [[ "$1" == "update" ]]; then
+    steamos-readonly enable
+fi
