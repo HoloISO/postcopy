@@ -51,7 +51,7 @@ clean_progress() {
 }
 
 updatecheck(){
-    curl -s "${endpoint}" > ${argdata}
+    curl -Ls "${endpoint}" > ${argdata}
     source ${argdata}
     if [[ "${STAGING_OS_TAG}" == "${OS_TAG}" ]]; then
         echo "System up to date."
