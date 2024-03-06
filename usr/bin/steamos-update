@@ -8,6 +8,7 @@ fi
 source /etc/holoiso-release
 argdata=/tmp/steamos-update-temparg
 ready_watcher=/tmp/steamos-ready-to-deploy
+download_url="https://get.holoiso.ru.eu.org"
 
 branchpath=/etc/holoiso-branch
 
@@ -26,9 +27,9 @@ else
 fi
 
 if [[ -n "${UPDATE_BRANCH_OVERRIDE}" ]]; then
-    downloadendpoint=https://cd2.holoiso.ru.eu.org/holoiso-images/${UPDATE_BRANCH_OVERRIDE}
+    downloadendpoint=${download_url}/holoiso-images/${UPDATE_BRANCH_OVERRIDE}
 else
-    downloadendpoint=https://cd2.holoiso.ru.eu.org/holoiso-images
+    downloadendpoint=${download_url}/holoiso-images
 fi
 
 
