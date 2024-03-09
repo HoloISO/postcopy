@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+. /usr/lib/hwsupport/common-functions
+
 # Originally from https://serverfault.com/a/767079
 
 # This script is called from our systemd unit file to mount or unmount
@@ -20,19 +22,8 @@ fi
 ACTION=$1
 DEVBASE=$2
 DEVICE="/dev/${DEVBASE}"
-
-# Shared between this and the auto-mount script to ensure we're not double-triggering nor automounting while formatting
-# or vice-versa.
-MOUNT_LOCK="/var/run/jupiter-automount-${DEVBASE//\/_}.lock"
-
-# Obtain lock
-exec 9<>"$MOUNT_LOCK"
-if ! flock -n 9; then
-    echo "$MOUNT_LOCK is active: ignoring action $ACTION"
-    # Do not return a success exit code: it could end up putting the service in 'started' state without doing the mount
-    # work (further start commands will be ignored after that)
-    exit 1
-fi
+DECK_UID=$(id -u deck)
+DECK_GID=$(id -g deck)
 
 send_steam_url()
 {
@@ -42,7 +33,7 @@ send_steam_url()
   if pgrep -x "steam" > /dev/null; then
       # TODO use -ifrunning and check return value - if there was a steam process and it returns -1, the message wasn't sent
       # need to retry until either steam process is gone or -ifrunning returns 0, or timeout i guess
-      systemd-run -M 1000@ --user --collect --wait sh -c "./.steam/root/ubuntu12_32/steam steam://${command}/${encoded@Q}"
+      systemd-run -M ${DECK_UID}@ --user --collect --wait sh -c "./.steam/root/ubuntu12_32/steam steam://${command}/${encoded@Q}"
       echo "Sent URL to steam: steam://${command}/${arg} (steam://${command}/${encoded})"
   else
       echo "Could not send steam URL steam://${command}/${arg} (steam://${command}/${encoded}) -- steam not running"
@@ -81,14 +72,6 @@ do_mount()
         exit 2
     fi
 
-    # Prior to talking to udisks, we need all udev hooks (we were started by one) to finish, so we know it has knowledge
-    # of the drive.  Our own rule starts us as a service with --no-block, so we can wait for rules to settle here
-    # safely.
-    if ! udevadm settle; then
-      echo "Failed to wait for \`udevadm settle\`"
-      exit 1
-    fi
-
     # Try to repair the filesystem if it's known to have errors.
     # ret=0 means no errors, 1 means that errors were corrected.
     # In all other cases we try to mount the fs read-only and report an error.
@@ -103,29 +86,17 @@ do_mount()
     fi
 
     # Ask udisks to auto-mount. This needs a version of udisks that supports the 'as-user' option.
-    ret=0
-    reply=$(busctl call --allow-interactive-authorization=false --expect-reply=true --json=short   \
-                org.freedesktop.UDisks2                                                            \
-                /org/freedesktop/UDisks2/block_devices/"${DEVBASE}"                                \
-                org.freedesktop.UDisks2.Filesystem                                                 \
-                Mount 'a{sv}' 3                                                                    \
-                  as-user s deck                                                                   \
-                  auth.no_user_interaction b true                                                  \
-                  options                  s "$OPTS") || ret=$?
+    mount_point=$(make_dbus_udisks_call call 'data[0]' s         \
+                                 "block_devices/${DEVBASE}"      \
+                                 Filesystem Mount                \
+                                 'a{sv}' 3                       \
+                                 as-user s deck                  \
+                                 auth.no_user_interaction b true \
+                                 options s "$OPTS")
 
-    if (( ret != 0 )); then
-        send_steam_url "system/devicemountresult" "${DEVBASE}/${MOUNT_ERROR}"
-        echo "Error mounting ${DEVICE} (status = $ret)"
-        exit 1
-    fi
-
-    # Expected reply is of the format
-    #  {"type":"s","data":["/run/media/deck/home"]}
-    mount_point=$(jq -r '.data[0] | select(type == "string")' <<< "$reply" || true)
-    if [[ -z $mount_point ]]; then
-        echo "Error when mounting ${DEVICE}: udisks returned success but could not parse reply:"
-        echo "---"$'\n'"$reply"$'\n'"---"
-        exit 1
+    # Ensure that the deck user can write to the root directory
+    if ! setpriv --clear-groups --reuid "${DECK_UID}" --regid "${DECK_GID}" test -w "${mount_point}"; then
+        chmod 777 "${mount_point}" || true
     fi
 
     # Create a symlink from /run/media to keep compatibility with apps

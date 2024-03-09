@@ -2,6 +2,8 @@
 
 set -e
 
+. /usr/lib/hwsupport/common-functions
+
 # If the script is not run from a tty then send a copy of stdout and
 # stderr to the journal. In this case stderr is also redirected to stdout.
 if ! tty -s; then
@@ -47,10 +49,10 @@ case "$STORAGE_DEVICE" in
         echo "Usage: $(basename $0) [--version] [--force] [--skip-validation] [--full] [--quick] [--owner <uid>:<gid>] [--label <label>] --device <device>"
         exit 19 #ENODEV
         ;;
-    /dev/mmcblk?)
+    /dev/mmcblk[0-9])
         STORAGE_PARTITION="${STORAGE_DEVICE}p1"
         ;;
-    /dev/sd?)
+    /dev/sd[a-z])
         STORAGE_PARTITION="${STORAGE_DEVICE}1"
         ;;
     *)
@@ -64,20 +66,13 @@ fi
 
 STORAGE_PARTBASE="${STORAGE_PARTITION#/dev/}"
 
-systemctl stop steamos-automount@"$STORAGE_PARTBASE".service
-
-# lock file prevents the mount service from re-mounting as it gets triggered by udev rules.
-#
-# NOTE: Uses a shared lock filename between this and the auto-mount script to ensure we're not double-triggering nor
-# automounting while formatting or vice-versa.
-MOUNT_LOCK="/var/run/jupiter-automount-${STORAGE_PARTBASE//\/_}.lock"
-MOUNT_LOCK_FD=9
-exec 9<>"$MOUNT_LOCK"
-
-if ! flock -n "$MOUNT_LOCK_FD"; then
-  echo "Failed to obtain lock $MOUNT_LOCK, failing"
-  exit 53
+# Shared between this and block-device-event.sh to ensure we're not
+# double-triggering nor automounting while formatting or vice-versa.
+if ! create_lock_file "$STORAGE_PARTBASE"; then
+    exit 53
 fi
+
+/usr/lib/hwsupport/steamos-automount.sh remove "${STORAGE_PARTBASE}"
 
 # If any partitions on the device are mounted, unmount them before continuing
 # to prevent problems later
@@ -142,11 +137,9 @@ mkfs.ext4 -m 0 -O casefold -E "$EXTENDED_OPTIONS" "${EXTRA_MKFS_ARGS[@]}" -F "$S
 sync
 udevadm settle
 
-# trigger the mount service
-flock -u "$MOUNT_LOCK_FD"
-if ! systemctl start steamos-automount@"$STORAGE_PARTBASE".service; then
-    echo "Failed to start mount service"
-    journalctl --no-pager --boot=0 -u steamos-automount@"$STORAGE_PARTBASE".service
+# Mount the device
+if ! /usr/lib/hwsupport/steamos-automount.sh add "$STORAGE_PARTBASE"; then
+    echo "Failed to mount ${STORAGE_PARTBASE}"
     exit 5
 fi
 
