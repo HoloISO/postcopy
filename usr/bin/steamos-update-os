@@ -41,10 +41,7 @@ cleandeployments(){
 }
 
 finalizeupd(){
-    mkdir -p ${installpath}
-    mount -t btrfs -o subvol=rootfs/${IMAGEFILE} -L holo_root ${installpath}
-    arch-chroot ${installpath} holoiso-postupdate-mgmt update
-    umount -l ${installpath}
+    holo-deploy switch rootfs/${IMAGEFILE}
     echo "Cleaning up..."
     rm -rf ${downloadpath}/${IMAGEFILE}/
     echo "Update complete."
@@ -52,12 +49,10 @@ finalizeupd(){
 
 beginupd(){
     # Decompress update container
-    echo "Decompressing update container..."
-    zstd -df ${installcontainer}
     echo "Removing unused snapshots..."
     cleandeployments
     echo "Installing OS Image ${STAGING_OS_TAG}..."
-    btrfs receive /holo_root/rootfs/ < ${installfile}
+    holo-deploy install ${installcontainer}
     finalizeupd
 }
 
@@ -66,8 +61,6 @@ if [[ -f ${argdata} ]]; then
         source ${argdata}
         installcontainer=${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.img.zst
         installsha=${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.sha256
-        installfile=${downloadpath}/${IMAGEFILE}/${IMAGEFILE}.img
-        installpath=/tmp/mounts/${IMAGEFILE}
         verintg
         beginupd
     else
