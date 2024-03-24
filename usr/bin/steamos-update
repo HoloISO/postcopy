@@ -5,10 +5,12 @@ then
     exec pkexec --disable-internal-agent "$0" "$@"
 fi
 
+mirrorfile=/etc/steamos-atomupd/mirror
 source /etc/holoiso-release
+source ${mirrorfile}
 argdata=/tmp/steamos-update-temparg
 ready_watcher=/tmp/steamos-ready-to-deploy
-download_url="https://get.holoiso.ru.eu.org"
+download_url=${MIRROR}
 
 branchpath=/etc/holoiso-branch
 
@@ -48,6 +50,11 @@ clean_progress() {
 			last_value=$value
 		fi
 	done
+}
+
+update_mirror(){
+    MIRRORARGPATH="https://github.com/holoiso-staging/postcopy/raw/${UPD_BRANCH}/etc/steamos-atomupd/mirror"
+    curl -Ls "${MIRRORARGPATH}" > ${mirrorfile}
 }
 
 updatecheck(){
@@ -118,6 +125,10 @@ if [ -n "$1" ]; then
     "--supports-duplicate-detection")
         echo "This script supports the duplicate detection option"
         exit 7
+        ;;
+    "update-mirror")
+        echo "Updating mirror..."
+        update_mirror 
     ;;
     esac
     shift
@@ -125,7 +136,7 @@ else
     if [[ -f "${argdata}" ]]; then
         applyupdate
     else
-        echo "Unknown option"
+        echo "Unknown option, Available options: [check|update-mirror]"
         exit 7
     fi
 fi
