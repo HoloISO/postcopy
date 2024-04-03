@@ -10,7 +10,7 @@ if [[ "${HOLOISO_DEVICE_TYPE}" == "Ayn" ]]; then
     setupaynplatform
 elif [[ "${HOLOISO_DEVICE_TYPE}" == "Win600" ]]; then
     systemctl disable handycon
-    pacman -U --noconfirm /usr/lib/holoiso-hwsupport/win600-xpad-dkms.pkg.tar.zst
+    setupwin600xpad
 fi
 
 echo "Device-specific postupdate hooks installation complete"
