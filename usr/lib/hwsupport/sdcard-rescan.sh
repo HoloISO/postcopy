@@ -46,6 +46,7 @@ KERNEL_VERSION=$(uname -r)
 case "$KERNEL_VERSION" in
     6.1.52-valve*) MIN_VERSION=6.1.52-valve18 ;;
     6.1.*) MIN_VERSION=6.1.72 ;;
+    6.5.*) MIN_VERSION=6.5.0-valve1-3 ;;
     6.6.*) MIN_VERSION=6.6.11 ;;
     *) MIN_VERSION=6.7 ;;
 esac
