@@ -15,7 +15,7 @@ else
 fi
 
 mount -L holo_efi /boot/efi
-grub-install --target=x86_64-efi --efi-directory=/boot/efi
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=steamos --removable
 grub-mkconfig -o /boot/grub/grub.cfg
 echo "Installing grub entry on ${EFI_STORAGE}, partition number ${EFI_PARTNUM}"
 efibootmgr -c -d ${EFI_STORAGE} -p ${EFI_PARTNUM} -L "HoloISO (GRUB)" -l '\EFI\steamos\grubx64.efi'
