@@ -32,7 +32,7 @@ do_add()
     # of the drive.  Our own rule starts us as a service with --no-block, so we can wait for rules to settle here
     # safely.
     if ! udevadm settle; then
-        echo "Failed to wait for \`udevadm settle\`" 2>&1
+        echo "Failed to wait for \`udevadm settle\`" >&2
         exit 1
     fi
 

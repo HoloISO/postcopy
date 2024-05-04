@@ -41,14 +41,14 @@ create_lock_file()
 {
     local DEVBASE="$1"
     if [[ ! $DEVBASE =~ ^[a-z0-9]+$ ]]; then
-        echo "Ignoring malformed device name /dev/${DEVBASE}" 2>&1
+        echo "Ignoring malformed device name /dev/${DEVBASE}" >&2
         return 1
     fi
 
     local MOUNT_LOCK="/var/run/jupiter-automount-${DEVBASE}.lock"
     exec 9<>"$MOUNT_LOCK"
     if ! flock -n 9; then
-        echo "Failed to obtain lock for /dev/${DEVBASE}" 2>&1
+        echo "Failed to obtain lock for /dev/${DEVBASE}" >&2
         return 1
     fi
 }
