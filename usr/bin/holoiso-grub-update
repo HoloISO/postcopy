@@ -1,4 +1,5 @@
 #!/bin/bash
+source /etc/holoiso-release
 if [[ $EUID -ne 0 ]];
 then
     exec pkexec --disable-internal-agent "$0" "$@"
@@ -14,9 +15,18 @@ else
     EFI_PARTNUM=$(echo ${EFI_LOCATION} | rev | cut -c 1 | rev)
 fi
 
+echo "Removing previous HoloISO boot entries"
+for entry in $(efibootmgr | grep -e steamos -e HoloISO | awk '{gsub(/Boot|[*0]/,""); print $1}')
+do
+    efibootmgr -b $entry -B 1>/dev/null
+done
+
 mount -L holo_efi /boot/efi
-grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=steamos --removable
-grub-mkconfig -o /boot/grub/grub.cfg
+echo "Removing previous HoloISO EFI installations"
+rm -rf /boot/efi/*
+grub-install --target=x86_64-efi --efi-directory=/boot/efi
+grub-mkconfig -o /boot/grub/grub.cfg 
 echo "Installing grub entry on ${EFI_STORAGE}, partition number ${EFI_PARTNUM}"
-efibootmgr -c -d ${EFI_STORAGE} -p ${EFI_PARTNUM} -L "HoloISO (GRUB)" -l '\EFI\steamos\grubx64.efi'
+CENTRY=$(find /boot/efi/ | sed 's/\/boot\/efi//g' | sed 's|/|\\|g' | tail -n1)
+efibootmgr -c -d ${EFI_STORAGE} -p ${EFI_PARTNUM} -L "HoloISO $OS_TAG (GRUB)" -l "${CENTRY}" 1>/dev/null
 umount -l /boot/efi
