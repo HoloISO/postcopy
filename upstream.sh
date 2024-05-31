@@ -6,8 +6,8 @@ mkdir -p ${srcdir}
 pkgdir=${SCRIPTPATH}
  ## jupiter-hw-support
     git clone https://gitlab.com/evlaV/jupiter-hw-support/ ${srcdir}/jupiter-hw-support
-    rm -rf ${srcdir}/jupiter-hw-support/usr/bin/jupiter-controller-update
-    rm -rf ${srcdir}/jupiter-hw-support/usr/bin/jupiter-biosupdate
+    mv ${srcdir}/jupiter-hw-support/usr/bin/jupiter-controller-update ${srcdir}/jupiter-hw-support/usr/bin/jupiter-controller-update-changes
+    mv ${srcdir}/jupiter-hw-support/usr/bin/jupiter-biosupdate ${srcdir}/jupiter-hw-support/usr/bin/jupiter-biosupdate-changes
     rm -rf ${srcdir}/jupiter-hw-support/usr/bin/steamos-priv-write
     rsync -a "$srcdir"/jupiter-hw-support/* "$pkgdir"
     cd $pkgdir/usr/share/steamos/

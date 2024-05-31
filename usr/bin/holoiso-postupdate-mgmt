@@ -8,7 +8,11 @@ fi
 source holoiso-devicequirk-set
 if [[ "${HOLOISO_DEVICE_TYPE}" == "Ayn" ]]; then
     setupaynplatform
+elif [[ "${HOLOISO_DEVICE_TYPE}" == "Win600" ]]; then
+    systemctl disable handycon
+    setupwin600xpad
 fi
+
 echo "Device-specific postupdate hooks installation complete"
 
 if [[ "$1" == "update" ]]; then

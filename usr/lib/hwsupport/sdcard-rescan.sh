@@ -46,6 +46,7 @@ KERNEL_VERSION=$(uname -r)
 case "$KERNEL_VERSION" in
     6.1.52-valve*) MIN_VERSION=6.1.52-valve18 ;;
     6.1.*) MIN_VERSION=6.1.72 ;;
+    6.5.*) MIN_VERSION=6.5.0-valve1-3 ;;
     6.6.*) MIN_VERSION=6.6.11 ;;
     *) MIN_VERSION=6.7 ;;
 esac
@@ -55,8 +56,21 @@ if printf "%s\n%s\n" "$KERNEL_VERSION" "$MIN_VERSION" | sort -CV; then
     exit 0
 fi
 
+# If this lock is held it means that a previous call to this script
+# hasn't finished yet and rescanning the card solved nothing.
+RESCAN_LOCK="/run/sdcard-rescan.lock"
+exec 9<>"$RESCAN_LOCK"
+if ! flock -n 9; then
+    echo "Rescanning SD card ${KERNEL_NAME} did not succeed, maybe it's damaged?" >&2
+    exit 0
+fi
+
 # Unbind and rebind the sdhci-pci device so the card is detected correctly
 echo "SD card ${KERNEL_NAME} incorrectly detected, forcing a reset"
 echo "$PCI_NAME" > /sys/bus/pci/drivers/sdhci-pci/unbind
 sleep 2
 echo "$PCI_NAME" > /sys/bus/pci/drivers/sdhci-pci/bind
+
+# Wait before releasing $RESCAN_LOCK to ensure that this script
+# is not called in a loop if the SD card is faulty.
+sleep 5

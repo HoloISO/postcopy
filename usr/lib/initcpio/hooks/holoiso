@@ -15,7 +15,7 @@ run_latehook() {
             mount "$var_source" /new_root/var -o "$mountopts"
         fi
     fi
-    msg ":: mounting /etc overlay"
+    msg ":: mounting /etc overlay from '$var_source' on physical root"
     mount -t overlay /new_root/etc -o index=off,metacopy=off,lowerdir=/new_root/etc,upperdir=/new_root/var/overlays/etc/upper,workdir=/new_root/var/overlays/etc/work /new_root/etc
 }
 

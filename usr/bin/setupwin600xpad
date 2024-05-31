@@ -1,0 +1,3 @@
+#!/bin/bash
+cp -r /usr/lib/holoiso-hwsupport/win600-xpad-dkms/. /
+cat /usr/src/linux-*/version | xargs -n1 dkms install xpad/6.3.7.snapshot20240402.1909 -k
