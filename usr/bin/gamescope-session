@@ -3,8 +3,6 @@
 ##
 ## Session globals
 ##
-export INTEL_DEBUG=norbc
-export mesa_glthread=true
 export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
 
 export HOMETEST_DESKTOP=1
@@ -263,8 +261,17 @@ else
 	echo >&2 "!! Failed to claim global gamescope stats session"
 fi
 
+VULKANINFO_DEVICES=$(vulkaninfo | grep deviceName | cut -d '=' -f 2)
+if [[ "${VULKANINFO_DEVICES}" =~ "Intel(R) UHD" ]]; then
+	GAMESCOPEEXEC=gamescope
+else
+	export INTEL_DEBUG=norbc
+	export mesa_glthread=true
+	GAMESCOPEEXEC=gamescope-generic
+fi
+
 source holoiso-devicequirk-set
-gamescope \
+${GAMESCOPEEXEC} \
 	--generate-drm-mode fixed \
 	--xwayland-count 2 \
 	${HOLOISO_GAMESCOPE_ADDITIONAL_OPTIONS} \
