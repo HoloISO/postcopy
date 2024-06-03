@@ -159,9 +159,6 @@ export QT_QPA_PLATFORM_THEME=kde
 #export vblank_mode=0
 #export MESA_VK_WSI_PRESENT_MODE=immediate
 
-# This is already on by default on Galileo, but this enables it on Jupiter too
-export ENABLE_GAMESCOPE_WSI=1
-
 # To play nice with the short term callback-based limiter for now
 export GAMESCOPE_LIMITER_FILE=$(mktemp /tmp/gamescope-limiter.XXXXXXXX)
 
@@ -261,10 +258,17 @@ else
 	echo >&2 "!! Failed to claim global gamescope stats session"
 fi
 
+
 VULKANINFO_DEVICES=$(vulkaninfo | grep deviceName | cut -d '=' -f 2)
 if [[ "${VULKANINFO_DEVICES}" =~ "Intel(R) UHD" ]]; then
+	echo "Latest Gamescope can be launched, proceeding"
+	# This is already on by default on Galileo, but this enables it on Jupiter too
+	# Re-enable when it becomes less of a hassle
+	#export ENABLE_GAMESCOPE_WSI=1
+	export mesa_glthread=true
 	GAMESCOPEEXEC=gamescope
 else
+	echo "Overriding Gamescope as 3.14.2..."
 	export INTEL_DEBUG=norbc
 	export mesa_glthread=true
 	GAMESCOPEEXEC=gamescope-generic
