@@ -260,18 +260,23 @@ fi
 
 
 VULKANINFO_DEVICES=$(vulkaninfo | grep deviceName | cut -d '=' -f 2)
+GLXINFO_DEVICES=$(glxinfo | grep -i renderer)
 if [[ "${VULKANINFO_DEVICES}" =~ "Intel(R) UHD" ]]; then
 	echo "Latest Gamescope can be launched, proceeding"
 	# This is already on by default on Galileo, but this enables it on Jupiter too
 	# Re-enable when it becomes less of a hassle
 	#export ENABLE_GAMESCOPE_WSI=1
-	export mesa_glthread=true
-	GAMESCOPEEXEC=gamescope
-else
-	echo "Overriding Gamescope as 3.14.2..."
 	export INTEL_DEBUG=norbc
 	export mesa_glthread=true
+	GAMESCOPEEXEC=gamescope
+elif [[ "${GLXINFO_DEVICES}" =~ "POLARIS" ]]; then
+	echo "Overriding Gamescope as 3.14.2..."
+	export mesa_glthread=true
 	GAMESCOPEEXEC=gamescope-generic
+else
+	echo "Trying latest gamescope..."
+	export mesa_glthread=true
+	GAMESCOPEEXEC=gamescope
 fi
 
 source holoiso-devicequirk-set
