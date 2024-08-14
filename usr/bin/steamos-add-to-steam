@@ -39,7 +39,7 @@ then
 fi
 mime=$(kmimetypefinder "$file")
 case "$mime" in
-    "application/x-desktop"|"application/x-ms-dos-executable")
+    "application/x-desktop"|"application/x-ms-dos-executable"|"application/x-msdownload"|"application/vnd.microsoft.portable-executable")
         add_to_steam "$file"
         ;;
     "application/x-executable"|"application/vnd.appimage"|"application/x-shellscript")
